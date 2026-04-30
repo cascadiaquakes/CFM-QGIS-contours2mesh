@@ -3,6 +3,7 @@ name: Build and Release QGIS Plugin
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write  # needed to upload assets to the release
@@ -47,11 +48,12 @@ jobs:
 
       - name: Build plugin zip
         run: |
-          pb_tool zip
-          ls -lah zip_build
-          unzip -l zip_build/contours2mesh.zip | grep -E "vendor/ccfm/ccfm/__init__\.py"
+          yes | pb_tool deploy
+          yes | pb_tool zip
+          ls -lah
+          unzip -l contours2mesh.zip | grep -E "vendor/ccfm/ccfm/__init__\.py"
 
       - name: Upload plugin .zip to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: zip_build/contours2mesh.zip
+          files: contours2mesh.zip
