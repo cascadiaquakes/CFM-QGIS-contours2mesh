@@ -7,10 +7,12 @@
 
 import sys
 import getpass
+from defusedxml.xmlrpc import monkey_patch
+
+# Harden the standard XML-RPC parser before creating any client connections.
+monkey_patch()
 import xmlrpc.client
 from optparse import OptionParser
-
-standard_library.install_aliases()
 
 # Configuration
 PROTOCOL = 'https'

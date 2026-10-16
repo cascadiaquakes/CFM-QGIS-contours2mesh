@@ -126,6 +126,11 @@ GeoPandas, SciPy, Shapely and Rasterio imports to catch dependency regressions.
 The older `test/` directory contains Plugin Builder template tests; `tests/`
 contains the maintained release checks.
 
+The optional legacy `plugin_upload.py` helper requires `defusedxml` to harden
+XML-RPC response parsing (`python -m pip install defusedxml`). This is a tool
+dependency, not a plugin runtime requirement. Its parser regression checks can
+be run with `python -m unittest discover -s tests -p 'test_plugin_upload.py' -v`.
+
 Before uploading, run the integration checks and a desktop install-from-ZIP smoke
 test in QGIS 3 and QGIS 4. Confirm the displayed plugin information, toolbar,
 Vector menu, example mesh and saved output. Make sure release metadata matches
