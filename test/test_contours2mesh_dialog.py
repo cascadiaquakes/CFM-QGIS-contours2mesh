@@ -16,18 +16,18 @@ import unittest
 
 from qgis.PyQt.QtGui import QDialogButtonBox, QDialog
 
-from contours2surface.py_dialog import Contours2SurfacePluginDialog
+from contours2mesh.contours2mesh_dialog import Contours2MeshPluginDialog
 
 from utilities import get_qgis_app
 QGIS_APP = get_qgis_app()
 
 
-class Contours2SurfacePluginDialogTest(unittest.TestCase):
+class Contours2MeshPluginDialogTest(unittest.TestCase):
     """Test dialog works."""
 
     def setUp(self):
         """Runs before each test."""
-        self.dialog = Contours2SurfacePluginDialog(None)
+        self.dialog = Contours2MeshPluginDialog(None)
 
     def tearDown(self):
         """Runs after each test."""
@@ -49,7 +49,7 @@ class Contours2SurfacePluginDialogTest(unittest.TestCase):
         self.assertEqual(result, QDialog.Rejected)
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(Contours2SurfacePluginDialogTest)
+    suite = unittest.makeSuite(Contours2MeshPluginDialogTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 

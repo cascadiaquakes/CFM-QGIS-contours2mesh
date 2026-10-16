@@ -1,20 +1,19 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025-2026, CRESCENT
 from qgis.PyQt.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QDoubleSpinBox, QPushButton, QFileDialog,
-    QListWidget, QListWidgetItem, QCheckBox, QWidget, QDialogButtonBox,
-    QComboBox, QMessageBox
+    QListWidget, QListWidgetItem, QCheckBox, QWidget,
+    QAbstractItemView, QComboBox, QMessageBox
 )
 from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.core import QgsProject, QgsVectorLayer, QgsWkbTypes
-import os
+from qgis.core import Qgis, QgsProject, QgsVectorLayer, QgsWkbTypes
 
 
 # Valid linestring geometry types for contour processing (2D and Z only)
 VALID_LINESTRING_TYPES = [
-    QgsWkbTypes.LineString,
-    QgsWkbTypes.MultiLineString,
-    QgsWkbTypes.LineStringZ,
-    QgsWkbTypes.MultiLineStringZ
+    Qgis.WkbType.LineString,
+    Qgis.WkbType.LineStringZ,
 ]
 
 
@@ -29,7 +28,7 @@ def is_valid_linestring_feature(feature):
     """Check if a feature has valid linestring geometry for contour processing."""
     geom = feature.geometry()
     flat_type = QgsWkbTypes.flatType(geom.wkbType())
-    return flat_type in [QgsWkbTypes.LineString, QgsWkbTypes.MultiLineString]
+    return not geom.isEmpty() and flat_type == Qgis.WkbType.LineString
 
 
 class ContourListItem(QWidget):
@@ -97,7 +96,7 @@ class MeshInputDialog(QDialog):
 
 
         self.contour_list = QListWidget()
-        self.contour_list.setSelectionMode(QListWidget.SingleSelection)
+        self.contour_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
         # Set up layer selection and connect signals
         self.layer_combo.currentTextChanged.connect(self.on_layer_changed)
@@ -215,6 +214,7 @@ class MeshInputDialog(QDialog):
                 QMessageBox.warning(self, "Error", f"Error loading layer: {str(e)}")
     
     def populate_layer_combo(self):
+        self.layer_combo.blockSignals(True)
         self.layer_combo.clear()
         self.layer_combo.addItem("-- Select a layer --")
         
@@ -230,8 +230,9 @@ class MeshInputDialog(QDialog):
                     preselected_index = self.layer_combo.count() - 1
         
         # Set the preselected layer in the combo box
-        if preselected_index > 0:
-            self.layer_combo.setCurrentIndex(preselected_index)
+        self.layer_combo.setCurrentIndex(preselected_index)
+        self.layer_combo.blockSignals(False)
+        self.on_layer_changed(self.layer_combo.currentText())
     
     def on_layer_changed(self, layer_name):
         if layer_name == "-- Select a layer --":
@@ -248,6 +249,7 @@ class MeshInputDialog(QDialog):
     
     def update_contour_list(self):
         self.contour_list.clear()
+        self.contour_data = []
         
         if not self.selected_layer:
             return
@@ -263,7 +265,7 @@ class MeshInputDialog(QDialog):
             if not is_valid_linestring_feature(f):
                 QMessageBox.warning(self, "Invalid Geometry", 
                                   f"Invalid geometry type: {QgsWkbTypes.displayString(f.geometry().wkbType())}. "
-                                  f"All features must be LineStrings or MultiLineStrings.")
+                                  f"All features must be single LineStrings. Convert multipart lines to singleparts first.")
                 return
         
         if len(features) < 2:
@@ -288,6 +290,7 @@ class MeshInputDialog(QDialog):
         # Populate the list
         for c in sorted_contours:
             item = QListWidgetItem()
+            item.setData(Qt.ItemDataRole.UserRole, c["feature"].id())
             widget = ContourListItem(c['name'], c['elev'])
             item.setSizeHint(widget.sizeHint())
             self.contour_list.addItem(item)
@@ -315,7 +318,7 @@ class MeshInputDialog(QDialog):
     def get_values(self):
         return (
             self.name_input.text(),
-            float(self.spacing_input.text()),
+            self.spacing_input.value(),
             self.path_input.text() if not self.is_temp_file else None,
             None  # elevation_path removed
         )
@@ -337,6 +340,7 @@ class MeshInputDialog(QDialog):
             current_widget = self.contour_list.itemWidget(current_item)
             
             # Store the widget data
+            feature_id = current_item.data(Qt.ItemDataRole.UserRole)
             name = current_widget.name
             elev = current_widget.elev
             checked = current_widget.is_checked()
@@ -346,6 +350,7 @@ class MeshInputDialog(QDialog):
             
             # Create new item and widget at the new position
             new_item = QListWidgetItem()
+            new_item.setData(Qt.ItemDataRole.UserRole, feature_id)
             new_widget = ContourListItem(name, elev, checked)
             new_item.setSizeHint(new_widget.sizeHint())
             self.contour_list.insertItem(current_row - 1, new_item)
@@ -363,6 +368,7 @@ class MeshInputDialog(QDialog):
             current_widget = self.contour_list.itemWidget(current_item)
             
             # Store the widget data
+            feature_id = current_item.data(Qt.ItemDataRole.UserRole)
             name = current_widget.name
             elev = current_widget.elev
             checked = current_widget.is_checked()
@@ -372,6 +378,7 @@ class MeshInputDialog(QDialog):
             
             # Create new item and widget at the new position
             new_item = QListWidgetItem()
+            new_item.setData(Qt.ItemDataRole.UserRole, feature_id)
             new_widget = ContourListItem(name, elev, checked)
             new_item.setSizeHint(new_widget.sizeHint())
             self.contour_list.insertItem(current_row + 1, new_item)
@@ -425,7 +432,7 @@ class MeshInputDialog(QDialog):
             if widget.is_checked():
                 # Match original contour dictionary
                 for c in self.contour_data:
-                    if c['name'] == widget.name and c['elev'] == widget.elev:
+                    if c["feature"].id() == item.data(Qt.ItemDataRole.UserRole):
                         selected.append(c)
                         break
         return selected

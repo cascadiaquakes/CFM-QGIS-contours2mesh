@@ -1,47 +1,25 @@
-# This file contains metadata for your plugin.
-
-# This file should be included when you package your plugin.# Mandatory items:
-
 [general]
 name=Contours2Mesh
-qgisMinimumVersion=3.0
-description=Generate 3D fault surfaces or geological meshes from a set of contour lines in QGIS.
-version=1.0.2
-author=CRESCENT
+qgisMinimumVersion=3.34
+qgisMaximumVersion=4.99
+description=Build 3D triangular fault surfaces from elevation contours, with adjustable mesh spacing and GeoJSON output.
+version=1.0.3
+author=CRESCENT; Loïc Bachelot and Richard Styron
 email=crescentcfm@cascadiaquakes.org
-
-about=Contours2Surface is a QGIS plugin designed to help geoscientists and GIS users convert sets of top, middle, and bottom LineString features into a structured 3D surface or fault mesh. It is especially useful for visualizing geological features such as faults or stratigraphic layers in 3D. The plugin leverages existing line geometries and builds a triangular mesh surface suitable for further analysis or export.
-
-tracker=http://bugsS
-repository=http://repo
-# End of mandatory metadata
-
-# Recommended items:
-
-hasProcessingProvider=no
-# Uncomment the following line and add your changelog:
-# changelog=
-
-# Tags are comma separated with spaces allowed
-tags=python
-
-homepage=http://homepage
-category=Plugins
+about=Contours2Mesh builds nonplanar 3D fault surfaces from two or more manually drafted contours. Reorder or exclude contours, set point spacing in kilometers, and generate a MultiPolygonZ mesh as a temporary layer or a GeoJSON file. The meshing library resamples contours and interpolates between them before connecting adjacent points into triangles.
+    Inputs must be single LineString or LineStringZ features in a geographic longitude/latitude CRS (EPSG:4326 recommended), with at least four vertices per contour and consistent digitizing direction. Supply elevations in meters through vertex Z coordinates or a numeric elev field. Order contours from top to bottom; a draped surface trace may need manual reordering. Multipart lines must first be converted to singleparts.
+    Requires NumPy >=1.20 in the Python environment used by QGIS (normally included with QGIS). GeoPandas, SciPy and Shapely are not required by the plugin. These dependencies are not bundled or installed automatically; see the README in the source repository for installation instructions. The BSD-licensed CFM-ccfm meshing source is bundled. CrossSectionDigitizer and Qgis2threejs are optional companion tools.
+    CRESCENT original code is BSD-3-Clause; retained Plugin Builder scaffolding is GPL-2.0-or-later. QGIS and PyQt retain their own licenses; use with the GPL edition of PyQt is subject to GPLv3. See LICENSE, THIRD_PARTY_NOTICES.md and licenses/.
+license=BSD-3-Clause AND GPL-2.0-or-later
+homepage=https://cascadiaquakes.github.io/fault-geometry-building-tutorial/QGIS_plugin.html
+repository=https://github.com/cascadiaquakes/CFM-QGIS-contours2mesh
+tracker=https://github.com/cascadiaquakes/CFM-QGIS-contours2mesh/issues
+category=Vector
+tags=geology,faults,3d,mesh,contours,earthquakes,crescent
 icon=icon.png
-# experimental flag
 experimental=False
-
-# deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
-
-# Since QGIS 3.8, a comma separated list of plugins to be installed
-# (or upgraded) can be specified.
-# Check the documentation for more information.
-# plugin_dependencies=
-
-Category of the plugin: Raster, Vector, Database or Web
-# category=
-
-# If the plugin can run on QGIS Server.
+hasProcessingProvider=no
 server=False
-
+changelog=1.0.3: QGIS 4 / Qt 6 compatibility; publishing metadata, dependency and license documentation; avoid optional GeoPandas imports; reproducible source-only packaging; contour selection and validation fixes; preserve interpolated vertex elevations during backend resampling.
+    1.0.2: Preserve vertex Z coordinates during meshing.

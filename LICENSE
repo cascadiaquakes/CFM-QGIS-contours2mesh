@@ -1,3 +1,12 @@
+Licensing scope
+===============
+CRESCENT original contributions are licensed under the BSD 3-Clause terms below.
+Existing GPL-2.0-or-later notices on Plugin Builder scaffolding remain in force.
+Use with QGIS and the GPL edition of PyQt is subject to the applicable GPL terms,
+including GPLv3 for PyQt. See THIRD_PARTY_NOTICES.md and licenses/ for the scope,
+third-party notices and complete GPL texts. The BSD grant does not relicense
+third-party code or dependencies.
+
 BSD 3-Clause License
 
 Copyright (c) 2026, CRESCENT

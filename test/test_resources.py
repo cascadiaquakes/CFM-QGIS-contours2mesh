@@ -18,7 +18,7 @@ from qgis.PyQt.QtGui import QIcon
 
 
 
-class Contours2SurfacePluginDialogTest(unittest.TestCase):
+class Contours2MeshPluginDialogTest(unittest.TestCase):
     """Test rerources work."""
 
     def setUp(self):
@@ -31,12 +31,12 @@ class Contours2SurfacePluginDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/Contours2SurfacePlugin/icon.png'
+        path = ':/plugins/Contours2MeshPlugin/icon.png'
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(Contours2SurfacePluginResourcesTest)
+    suite = unittest.makeSuite(Contours2MeshPluginResourcesTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 

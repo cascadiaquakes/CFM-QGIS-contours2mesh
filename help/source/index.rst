@@ -1,20 +1,11 @@
-.. Contours2SurfacePlugin documentation master file, created by
-   sphinx-quickstart on Sun Feb 12 17:11:03 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Contours2Mesh
+=============
 
-Welcome to Contours2SurfacePlugin's documentation!
-============================================
+Build 3D triangular fault surfaces from elevation contours in QGIS.
 
-Contents:
+For requirements, installation, examples and release checks, see the
+`README <https://github.com/cascadiaquakes/CFM-QGIS-contours2mesh#readme>`_.
 
-.. toctree::
-   :maxdepth: 2
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+For the illustrated workflow, see
+`Making 3D fault geometries from cross-sections
+<https://cascadiaquakes.github.io/fault-geometry-building-tutorial/QGIS_plugin.html>`_.
