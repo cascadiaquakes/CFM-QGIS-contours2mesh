@@ -4,6 +4,7 @@
 import importlib
 import builtins
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -161,6 +162,96 @@ class QgisTests(unittest.TestCase):
         with patch.object(QMessageBox, 'critical') as critical:
             self.plugin.process_contours(self.dialog)
             self.assertEqual(critical.call_args.args[1], 'Invalid CRS')
+
+    def manastash_dialog(self):
+        """Load the real fixture and move the null-elev trace above all contours."""
+        path = Path(__file__).resolve().parent / 'data' / 'manastash_contours.geojson'
+        layer = QgsVectorLayer(str(path), 'Manastash contours', 'ogr')
+        self.assertTrue(layer.isValid())
+        self.assertEqual(layer.featureCount(), 16)
+        self.project.addMapLayer(layer)
+        dialog = dialogs.MeshInputDialog(None, preselected_layer=layer)
+        self.addCleanup(dialog.close)
+        contours = dialog.get_selected_contours()
+        trace_rows = [row for row, contour in enumerate(contours)
+                      if contour['name'] == 'manastash_trace']
+        self.assertEqual(len(trace_rows), 1)
+        # The dialog initially sorts null elev last. Exercise the same move-up
+        # control the user needs to place the draped trace at the surface.
+        self.assertEqual(trace_rows[0], len(contours) - 1)
+        self.assertIsNone(contours[trace_rows[0]]['elev'])
+        dialog.contour_list.setCurrentRow(trace_rows[0])
+        for _ in range(trace_rows[0]):
+            dialog.move_contour_up()
+        ordered = dialog.get_selected_contours()
+        self.assertEqual(ordered[0]['name'], 'manastash_trace')
+        self.assertEqual(len({c['feature'].id() for c in ordered}), 16)
+        return dialog
+
+    def test_manastash_trace_first_and_remaining_contours_descend(self):
+        dialog = self.manastash_dialog()
+        selected = dialog.get_selected_contours()
+        self.assertEqual(selected[1]['name'], 'manastash_228')
+        self.assertEqual(selected[-1]['name'], 'manastash_-9060')
+        elevations = [contour['elev'] for contour in selected[1:]]
+        self.assertEqual(elevations, sorted(elevations, reverse=True))
+        self.assertIsNone(selected[0]['elev'])
+        # Moving the trace must not lose its feature or its vertex elevations.
+        original_trace = next(feature for feature in dialog.get_selected_layer().getFeatures()
+                              if feature['name'] == 'manastash_trace')
+        self.assertEqual(selected[0]['feature'].id(), original_trace.id())
+        self.assertEqual([vertex.z() for vertex in selected[0]['feature'].geometry().vertices()],
+                         [vertex.z() for vertex in original_trace.geometry().vertices()])
+
+    def test_manastash_resampling_preserves_vertex_elevations(self):
+        self.manastash_dialog()  # Also verify trace-first ordering through the UI.
+        path = Path(__file__).resolve().parent / 'data' / 'manastash_contours.geojson'
+        features = json.loads(path.read_text())['features']
+        trace = next(feature for feature in features
+                     if feature['properties']['name'] == 'manastash_trace')
+        ordered = [trace] + sorted(
+            [feature for feature in features if feature is not trace],
+            key=lambda feature: feature['properties']['elev'], reverse=True)
+        prepared = implementation.prepare_fault_contours(ordered, pt_distance=0.5)
+        self.assertEqual(len(prepared), 16)
+        self.assertGreater(len(prepared[0]), 4)
+        self.assertTrue(all(len(contour) == len(prepared[0]) for contour in prepared))
+        for source, sampled in zip(ordered, prepared):
+            original = source['geometry']['coordinates']
+            low = min(vertex[2] for vertex in original)
+            high = max(vertex[2] for vertex in original)
+            for vertex in sampled:
+                self.assertEqual(len(vertex), 3)
+                self.assertTrue(all(math.isfinite(value) for value in vertex))
+                self.assertGreaterEqual(vertex[2], low - 1e-8)
+                self.assertLessEqual(vertex[2], high + 1e-8)
+            for source_end, sampled_end in ((original[0], sampled[0]),
+                                            (original[-1], sampled[-1])):
+                for expected, actual in zip(source_end, sampled_end):
+                    self.assertAlmostEqual(actual, expected, places=7)
+        # The fixture's manastash_228 has elev=228 but Z=288. Z must win.
+        self.assertEqual(ordered[1]['properties']['elev'], 228)
+        self.assertTrue(all(vertex[2] == 288 for vertex in prepared[1]))
+        self.assertGreater(max(v[2] for v in prepared[0]) - min(v[2] for v in prepared[0]), 100)
+        self.assertTrue(all(vertex[2] == -9060 for vertex in prepared[-1]))
+
+    def test_manastash_full_mesh_with_trace_on_top(self):
+        dialog = self.manastash_dialog()
+        dialog.spacing_input.setValue(0.5)
+        geometry = self.generate(dialog)
+        vertices = [vertex for polygon in geometry['coordinates'] for vertex in polygon[0]]
+        self.assertTrue(all(math.isfinite(value) for vertex in vertices for value in vertex))
+        elevations = [vertex[2] for vertex in vertices]
+        self.assertEqual(min(elevations), -9060)
+        self.assertGreater(max(elevations), 800)
+        self.assertLessEqual(max(elevations), 940.4371337890625)
+        # Both original endpoints of the draped surface trace survive meshing.
+        trace = dialog.get_selected_contours()[0]['feature']
+        trace_vertices = list(trace.geometry().vertices())
+        rounded_vertices = {tuple(round(value, 7) for value in vertex) for vertex in vertices}
+        for point in (trace_vertices[0], trace_vertices[-1]):
+            self.assertIn(tuple(round(value, 7) for value in (point.x(), point.y(), point.z())),
+                          rounded_vertices)
 
     def test_locale_spacing_uses_numeric_value(self):
         self.dialog.spacing_input.setLocale(QLocale('de_DE'))

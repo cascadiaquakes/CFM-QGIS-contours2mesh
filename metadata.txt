@@ -5,7 +5,7 @@ qgisMaximumVersion=4.99
 description=Build 3D triangular fault surfaces from elevation contours, with adjustable mesh spacing and GeoJSON output.
 version=1.0.3
 author=CRESCENT; Loïc Bachelot and Richard Styron
-email=crescentcfm@cascadiaquakes.org
+email=richard.h.styron@gmail.com
 about=Contours2Mesh builds nonplanar 3D fault surfaces from two or more manually drafted contours. Reorder or exclude contours, set point spacing in kilometers, and generate a MultiPolygonZ mesh as a temporary layer or a GeoJSON file. The meshing library resamples contours and interpolates between them before connecting adjacent points into triangles.
     Inputs must be single LineString or LineStringZ features in a geographic longitude/latitude CRS (EPSG:4326 recommended), with at least four vertices per contour and consistent digitizing direction. Supply elevations in meters through vertex Z coordinates or a numeric elev field. Order contours from top to bottom; a draped surface trace may need manual reordering. Multipart lines must first be converted to singleparts.
     Requires NumPy >=1.20 in the Python environment used by QGIS (normally included with QGIS). GeoPandas, SciPy and Shapely are not required by the plugin. These dependencies are not bundled or installed automatically; see the README in the source repository for installation instructions. The BSD-licensed CFM-ccfm meshing source is bundled. CrossSectionDigitizer and Qgis2threejs are optional companion tools.

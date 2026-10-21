@@ -107,7 +107,7 @@ compiler, pb_tool deployment or write to an installed QGIS profile is needed.
 The release workflow uses the same builder and attaches the ZIP to GitHub releases.
 
 Version 1.0.3 was checked locally against QGIS 3.40.1 / Qt 5.15.2 / NumPy 1.20.1
-and QGIS 4.2.3 / Qt 6.11.1 / NumPy 2.5.2. Six archive-based integration checks
+and QGIS 4.2.3 / Qt 6.11.1 / NumPy 2.5.2. Nine archive-based integration checks
 passed in each runtime, as well as three packaging checks. These checks use
 Qt's offscreen platform; they do not replace a desktop installation smoke test.
 The upstream library's `pyproject.toml` lists broader installation dependencies;
@@ -121,7 +121,11 @@ QT_QPA_PLATFORM=offscreen /path/to/qgis/python tests/check_qgis.py dist/contours
 
 These checks load the **extracted archive**, create the dialog and menu action,
 mesh both 2D and Z contours, reload the output in QGIS, check contour reordering,
-check localized spacing and reject a projected CRS. They deliberately block
+check localized spacing and reject a projected CRS. The Manastash regression
+fixture in `tests/data/` adds three checks: move the null-elevation trace to the
+top using the dialog controls, preserve vertex elevations during resampling,
+and generate and reload a mesh from all 16 contours at 0.5 km spacing. The
+fixture is kept in the source repository and excluded from the submission ZIP. They deliberately block
 GeoPandas, SciPy, Shapely and Rasterio imports to catch dependency regressions.
 The older `test/` directory contains Plugin Builder template tests; `tests/`
 contains the maintained release checks.
