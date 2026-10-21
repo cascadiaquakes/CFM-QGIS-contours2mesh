@@ -253,6 +253,26 @@ class QgisTests(unittest.TestCase):
             self.assertIn(tuple(round(value, 7) for value in (point.x(), point.y(), point.z())),
                           rounded_vertices)
 
+    def test_backend_dip_direction_validation(self):
+        backend = importlib.import_module('contours2mesh._ccfm_backend.geom')
+        fault = {
+            'geometry': {'type': 'LineString', 'coordinates': [
+                [-120.1, 47.0], [-120.08, 47.0],
+                [-120.06, 47.0], [-120.04, 47.0],
+            ]},
+            'properties': {'dip': 45.0, 'dip_dir': 'N'},
+        }
+        # An eastward trace projects south, conflicting with a northward dip.
+        # This must raise even when the interpreter is invoked with python -O.
+        with self.assertRaisesRegex(ValueError, r'projection direction .*dip direction \(N\)'):
+            backend.make_3d_fault_mesh(fault, check_dip_dir=True)
+        # Matching directions and explicitly disabled checks still work.
+        unchecked = backend.make_3d_fault_mesh(fault, check_dip_dir=False)
+        fault['properties']['dip_dir'] = 'S'
+        checked = backend.make_3d_fault_mesh(fault, check_dip_dir=True)
+        self.assertEqual(checked, unchecked)
+        self.assertGreater(len(checked), 1)
+
     def test_locale_spacing_uses_numeric_value(self):
         self.dialog.spacing_input.setLocale(QLocale('de_DE'))
         self.dialog.spacing_input.setValue(0.75)

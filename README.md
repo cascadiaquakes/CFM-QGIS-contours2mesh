@@ -99,24 +99,26 @@ python3 scripts/build_plugin.py
 python3 -m unittest discover -s tests -p 'test_packaging.py' -v
 ```
 
-The canonical build produces `dist/contours2mesh-1.0.3.zip` with one
+The canonical build produces `dist/contours2mesh-1.0.5.zip` with one
 `contours2mesh/` root directory. It includes Python sources, UI, icon, metadata,
 documentation, example data, upstream license and GPL texts. It excludes git
 metadata, caches, binary dependencies and development files. No Qt resource
 compiler, pb_tool deployment or write to an installed QGIS profile is needed.
 The release workflow uses the same builder and attaches the ZIP to GitHub releases.
 
-Version 1.0.3 was checked locally against QGIS 3.40.1 / Qt 5.15.2 / NumPy 1.20.1
-and QGIS 4.2.3 / Qt 6.11.1 / NumPy 2.5.2. Nine archive-based integration checks
+The plugin was checked locally against QGIS 3.40.1 / Qt 5.15.2 / NumPy 1.20.1
+and QGIS 4.2.3 / Qt 6.11.1 / NumPy 2.5.2. Ten archive-based integration checks
 passed in each runtime, as well as three packaging checks. These checks use
 Qt's offscreen platform; they do not replace a desktop installation smoke test.
-The upstream library's `pyproject.toml` lists broader installation dependencies;
+The bundled CFM-ccfm source is pinned to merged commit `6e81b57`, which includes
+the explicit dip-direction validation. The upstream library's `pyproject.toml`
+lists broader installation dependencies;
 the plugin's private numerical backend does not install that Python distribution.
 
 Run the integration checks with each target QGIS installation's Python launcher:
 
 ```sh
-QT_QPA_PLATFORM=offscreen /path/to/qgis/python tests/check_qgis.py dist/contours2mesh-1.0.3.zip
+QT_QPA_PLATFORM=offscreen /path/to/qgis/python tests/check_qgis.py dist/contours2mesh-1.0.5.zip
 ```
 
 These checks load the **extracted archive**, create the dialog and menu action,
@@ -125,8 +127,8 @@ check localized spacing and reject a projected CRS. The Manastash regression
 fixture in `tests/data/` adds three checks: move the null-elevation trace to the
 top using the dialog controls, preserve vertex elevations during resampling,
 and generate and reload a mesh from all 16 contours at 0.5 km spacing. The
-fixture is kept in the source repository and excluded from the submission ZIP. They deliberately block
-GeoPandas, SciPy, Shapely and Rasterio imports to catch dependency regressions.
+fixture is kept in the source repository and excluded from the submission ZIP.
+The checks also verify dip-direction validation and deliberately block GeoPandas, SciPy, Shapely and Rasterio imports to catch dependency regressions.
 The older `test/` directory contains Plugin Builder template tests; `tests/`
 contains the maintained release checks.
 

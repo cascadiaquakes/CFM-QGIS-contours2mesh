@@ -3,7 +3,7 @@ name=Contours2Mesh
 qgisMinimumVersion=3.34
 qgisMaximumVersion=4.99
 description=Build 3D triangular fault surfaces from elevation contours, with adjustable mesh spacing and GeoJSON output.
-version=1.0.3
+version=1.0.5
 author=CRESCENT; Loïc Bachelot and Richard Styron
 email=richard.h.styron@gmail.com
 about=Contours2Mesh builds nonplanar 3D fault surfaces from two or more manually drafted contours. Reorder or exclude contours, set point spacing in kilometers, and generate a MultiPolygonZ mesh as a temporary layer or a GeoJSON file. The meshing library resamples contours and interpolates between them before connecting adjacent points into triangles.
@@ -21,5 +21,7 @@ experimental=False
 deprecated=False
 hasProcessingProvider=no
 server=False
-changelog=1.0.3: QGIS 4 / Qt 6 compatibility; publishing metadata, dependency and license documentation; avoid optional GeoPandas imports; reproducible source-only packaging; contour selection and validation fixes; preserve interpolated vertex elevations during backend resampling.
+changelog=1.0.5: Pin CFM-ccfm to merged upstream commit 6e81b57, replacing the local backend patch with reproducible upstream sources.
+    1.0.4: Replace the backend dip-direction assertion with explicit validation that remains active under optimized Python; add regression coverage.
+    1.0.3: QGIS 4 / Qt 6 compatibility; publishing metadata, dependency and license documentation; avoid optional GeoPandas imports; reproducible source-only packaging; contour selection and validation fixes; preserve interpolated vertex elevations during backend resampling.
     1.0.2: Preserve vertex Z coordinates during meshing.
